@@ -48,5 +48,22 @@ class Pedido(Base):
         self.status = status
 
 
+class ItemPedido(Base):
+    __tablename__ = 'itens_pedido'
 
+    id = Column("id", Integer, autoincrement=True, primary_key=True)
+    quantidade = Column("quantidade", Integer)
+    sabor = Column("sabor", String)
+    tamanho = Column("tamanho", String)
+    preco_unitario = Column("preco_unitario", Float)
+    pedido = Column("pedido", ForeignKey("pedido.id"))
+
+    def __init__(self, quantidade, sabor, tamanho, preco_unitario, pedido):
+        self.quantidade = quantidade
+        self.sabor = sabor
+        self.tamanho = tamanho
+        self.preco_unitario = preco_unitario
+        self.pedido = pedido
+    
 # Executa a criação dos metadados do seu banco de dados
+
