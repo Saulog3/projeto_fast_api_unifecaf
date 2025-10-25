@@ -2,7 +2,11 @@ from sqlalchemy.orm import sessionmaker
 from models.models import db
 
 def start_session():
-    Session = sessionmaker(bind=db) #inicia uma sessão de query no db(engine)
-    session = Session()
-
-    return session
+    Session = sessionmaker(bind=db)
+    session = None
+    try:
+        session = Session()
+        yield session
+    finally:
+        if session is not None:
+            session.close()
