@@ -56,7 +56,7 @@ class ItemPedido(Base):
     sabor = Column("sabor", String)
     tamanho = Column("tamanho", String)
     preco_unitario = Column("preco_unitario", Float)
-    pedido = Column("pedido", ForeignKey("pedido.id"))
+    pedido = Column("pedido", ForeignKey("pedidos.id"))
 
     def __init__(self, quantidade, sabor, tamanho, preco_unitario, pedido):
         self.quantidade = quantidade
