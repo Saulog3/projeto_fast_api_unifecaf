@@ -9,4 +9,13 @@ class UsuarioSchema(BaseModel):
     admin: bool = False
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class PedidoSchema(BaseModel):
+
+    id_usuario: str #O schema recebe o valor definido no models
+
+    
+    class Config:
+        from_attributes = True
