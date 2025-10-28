@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 
 
-#APIRouter idica o o inicio do endpoint.
+#APIRouter idica o inicio do endpoint.
 #Aqui será configurado tudo que tera no aaaa.aaaaaa.com/pedidos
 auth_router = APIRouter(prefix="/auth", tags=['auth'])
 
@@ -20,6 +20,12 @@ def send_token(id_usuario, duracao_token=timedelta(minutes=ACCESS_TOKEN_EXPIRE_M
     }
     jwt_enconde = jwt.encode(dic_info, SECRET_KEY, ALGORITHM)
     return jwt_enconde
+
+def check_token(token, session: Session = Depends(start_session)):
+   # Verificar se o token é válido
+   # Extrair o id do usuário do token
+   usuario = session.query(Usuario).filter(Usuario.id==1).first()
+   return usuario
 
 def autenticar_usuario(email, senha, session):
     usuario = session.query(Usuario).filter(Usuario.email==email).first()
@@ -71,3 +77,12 @@ async def login(login: LoginSchema, session: Session = Depends(start_session)):
             "refresh_token": refresh_token,
             "token_type": "Bearer"
         }
+
+@auth_router.get('/refresh')
+async def use_refresh_token(token):
+    usuario = check_token(token)
+    access_token = send_token(usuario.id)
+    return {
+    "access_token": access_token,
+    "token_type": "Bearer"
+}
