@@ -3,7 +3,12 @@ from sqlalchemy.orm import declarative_base
 # from sqlalchemy_utils import ChoiceType
 
 #Conexão com o banco de dados
-db = create_engine("sqlite:///.banco.db")
+
+
+db = create_engine(
+    "sqlite:///.banco.db",
+    connect_args={"check_same_thread": False},
+    )
 
 # Cria a base do banco de dados
 Base = declarative_base()
