@@ -22,8 +22,6 @@ def send_token(id_usuario, duracao_token=timedelta(minutes=ACCESS_TOKEN_EXPIRE_M
     jwt_enconde = jwt.encode(dic_info, SECRET_KEY, ALGORITHM)
     return jwt_enconde
 
-
-
 def autenticar_usuario(email, senha, session):
     usuario = session.query(Usuario).filter(Usuario.email==email).first()
     if not usuario:
