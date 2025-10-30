@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from models.models import Usuario
 from helpers.dependencies import start_session, check_token
 from main import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
@@ -60,6 +61,18 @@ async def criar_conta(
         session.commit()
         return {"mensagem": f"Usuário cadastrado com sucesso {usuario_schema.email}"}
 
+@auth_router.post('/login-form')
+async def login_form(dados_formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(start_session)):
+    usuario = autenticar_usuario(dados_formulario.username, dados_formulario.password, session)
+    if not usuario:
+        raise HTTPException(status_code=400, detail='Usuário não encontrado ou credenciais inválidas')
+    else:
+        access_token = send_token(usuario.id)
+        return {
+            "access_token": access_token,
+            "token_type": "Bearer"
+        }
+
 @auth_router.post('/login')
 async def login(login: LoginSchema, session: Session = Depends(start_session)):
     usuario = autenticar_usuario(login.email, login.senha, session)
@@ -73,6 +86,8 @@ async def login(login: LoginSchema, session: Session = Depends(start_session)):
             "refresh_token": refresh_token,
             "token_type": "Bearer"
         }
+
+
 
 @auth_router.get('/refresh')
 async def use_refresh_token(usuario: Usuario = Depends(check_token)):
