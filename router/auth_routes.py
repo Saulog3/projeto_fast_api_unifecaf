@@ -36,7 +36,6 @@ async def autenticação():
     return {"mensagem":" Você acessou a rota de autenticação", "autenticado": False}
 
 @auth_router.post("/criar_conta")
-
 async def criar_conta(
     usuario_schema: UsuarioSchema,
     session: Session = Depends(start_session)
@@ -58,6 +57,16 @@ async def criar_conta(
         session.add(novo_usuario)
         session.commit()
         return {"mensagem": f"Usuário cadastrado com sucesso {usuario_schema.email}"}
+
+@auth_router.delete("/delete_user")
+async def delete_user(email: str, session = Depends(start_session)):
+    user_del = session.query(Usuario).filter(Usuario.email==email).first()
+    if not user_del:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    else:
+        session.delete(user_del)
+        session.commit()
+        return {"Mensagem": f"Usuário {user_del.email} deletado com sucesso!"}
 
 @auth_router.post('/login-form')
 async def login_form(dados_formulario: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(start_session)):
