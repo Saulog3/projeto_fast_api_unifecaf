@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends
+from typing import Any
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from helpers.schemas import PedidoSchema
-from helpers.dependencies import start_session
-from models.models import Pedido
+from helpers.dependencies import start_session, check_token
+from models.models import Pedido, Usuario
 
 #APIRouter idica o o inicio do endpoint.
 #Aqui será configurado tudo que tera no aaaa.aaaaaa.com/pedidos
-order_router = APIRouter(prefix="/pedidos", tags=['pedidos'])
+order_router = APIRouter(prefix="/pedidos", tags=['pedidos'], dependencies=[Depends(check_token)])
 
 @order_router.get('/') # Aqui é definido a função que será executa na rota indicada
 async def pedidos():
@@ -19,4 +20,20 @@ async def criar_pedido(pedido_schema: PedidoSchema, session: Session = Depends(s
     session.add(novo_pedido)
     session.commit()
     return {'mensagem': f'O pedido ID:{novo_pedido.id} registrado com sucesso'}
+
+@order_router.post("/pedidos/cancelar/{id_pedido}")
+async def cancelar_pedido(id_pedido: int, session: Session = Depends(start_session), usuario: Any = Depends(check_token)):
+    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
+    if not pedido:
+        raise HTTPException(status_code=400, detail="Pedido não encontrado")
+    # check ownership first (safe OP) and only then fall back to admin flag
+    if usuario.admin != pedido.usuario and not getattr(usuario, "admin", False):
+        raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
+
+    pedido.status = "CANCELADO"
+    session.commit()
+    return{
+        "mensagem": f"Pedido número: {pedido.id} cancelado com sucesso", 
+        "pedido": pedido
+    }
     
