@@ -17,7 +17,7 @@ def start_session():
 
 def check_token(token: str = Depends(oauth2_schema), session: Session = Depends(start_session)):
     try:
-        dicionario_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        dicionario_info = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         id_usuario = dicionario_info.get('sub')
     except JWTError:
         raise HTTPException(status_code=401, detail="Acesso Negado")

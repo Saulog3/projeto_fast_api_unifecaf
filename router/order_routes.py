@@ -1,4 +1,3 @@
-from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from helpers.schemas import PedidoSchema, ItemPedidoSchema
@@ -22,16 +21,18 @@ async def criar_pedido(pedido_schema: PedidoSchema, session: Session = Depends(s
     return {'mensagem': f'O pedido ID:{novo_pedido.id} registrado com sucesso'}
 
 @order_router.post("/pedidos/cancelar/{id_pedido}")
-async def cancelar_pedido(id_pedido: int, session: Session = Depends(start_session), usuario: Any = Depends(check_token)):
+async def cancelar_pedido(id_pedido: int, session: Session = Depends(start_session), usuario: Session = Depends(check_token)):
     pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
+
     if not pedido:
         raise HTTPException(status_code=400, detail="Pedido não encontrado")
-    # check ownership first (safe OP) and only then fall back to admin flag
-    if usuario.admin != pedido.usuario and not getattr(usuario, "admin", False):
+
+    if usuario.id != pedido.usuario and not usuario.admin: # type: ignore
         raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
 
     pedido.status = "CANCELADO" 
     session.commit()
+    
     return{
         "mensagem": f"Pedido número: {pedido.id} cancelado com sucesso", 
         "pedido": pedido
@@ -57,17 +58,18 @@ async def adicionar_item_pedido(
     pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
     if not pedido:
         raise HTTPException(status_code=400, detail="Pedido não encontrado")
-    if not getattr(usuario, "admin", True) and usuario.id != getattr(pedido, usuario):
+    if usuario.id != pedido.usuario and not usuario.admin: # type: ignore
         raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
     else:
         itens_pedido = ItemPedido(
-            ItemPedidoSchema.quantidade,
-            ItemPedidoSchema.sabor,
-            ItemPedidoSchema.tamanho,
-            ItemPedidoSchema.preco_unitario,
+            itens_pedido.quantidade,
+            itens_pedido.sabor,
+            itens_pedido.tamanho,
+            itens_pedido.preco_unitario,
             id_pedido)
-    pedido.calcular_preco()
+   
     session.add(itens_pedido)
+    pedido.calcular_preco()
     session.commit()
     return{
         "mensagem:": "Item criado com sucesso",
