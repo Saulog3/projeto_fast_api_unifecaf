@@ -1,9 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from helpers.schemas import PedidoSchema
+from helpers.schemas import PedidoSchema, ItemPedidoSchema
 from helpers.dependencies import start_session, check_token
-from models.models import Pedido, Usuario
+from models.models import Pedido, Usuario, ItemPedido
 
 #APIRouter idica o o inicio do endpoint.
 #Aqui será configurado tudo que tera no aaaa.aaaaaa.com/pedidos
@@ -30,10 +30,51 @@ async def cancelar_pedido(id_pedido: int, session: Session = Depends(start_sessi
     if usuario.admin != pedido.usuario and not getattr(usuario, "admin", False):
         raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
 
-    pedido.status = "CANCELADO"
+    pedido.status = "CANCELADO" 
     session.commit()
     return{
         "mensagem": f"Pedido número: {pedido.id} cancelado com sucesso", 
         "pedido": pedido
     }
     
+@order_router.get("/lista")
+async def listar_pedidos(session: Session = Depends(start_session), usuario: Usuario = Depends(check_token)):
+    if not getattr(usuario, "admin", True):
+        raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
+    else:
+        pedidos = session.query(Pedido).all()
+        return{
+            "pedidos": pedidos
+        }
+
+@order_router.post("/pedido/adicionar-item/{id_pedido}")
+async def adicionar_item_pedido(
+    id_pedido: int,
+    itens_pedido: ItemPedidoSchema, 
+    session: Session = Depends(start_session),
+    usuario: Usuario = Depends(check_token)):
+
+    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
+    if not pedido:
+        raise HTTPException(status_code=400, detail="Pedido não encontrado")
+    if not getattr(usuario, "admin", True) and usuario.id != getattr(pedido, usuario):
+        raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
+    else:
+        itens_pedido = ItemPedido(
+            ItemPedidoSchema.quantidade,
+            ItemPedidoSchema.sabor,
+            ItemPedidoSchema.tamanho,
+            ItemPedidoSchema.preco_unitario,
+            id_pedido)
+    pedido.calcular_preco()
+    session.add(itens_pedido)
+    session.commit()
+    return{
+        "mensagem:": "Item criado com sucesso",
+        "item_id": itens_pedido.id,
+        "preço_pedido": pedido.preco
+
+    }
+
+
+
