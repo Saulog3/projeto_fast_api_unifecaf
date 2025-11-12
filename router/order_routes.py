@@ -98,11 +98,10 @@ async def remover_item_pedido(
     session.delete(item_pedido)
     pedido.calcular_preco()
     session.commit()
-    
     return{
         "mensagem:": "Item removido com sucesso",
         "item_removido": item_pedido,
-        "quantidade_itens_pedido": len(pedido.itens), # type: ignore
+        "quantidade_itens_pedido": len(pedido.itens),
         "pedido": pedido
     }
 
