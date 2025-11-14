@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, Float
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, mapped_column, Mapped
 # from sqlalchemy_utils import ChoiceType
 
 #Conexão com o banco de dados
@@ -17,12 +17,12 @@ Base = declarative_base()
 
 class Usuario(Base):
     __tablename__ = "usuarios"
-    id = Column("id", Integer, autoincrement=True, primary_key=True)
-    nome = Column("nome", String)
-    email = Column("email", String, nullable=False)
-    senha = Column("senha", String)
-    ativo = Column("ativo", Boolean)
-    admin = Column("admin", Boolean, default=False)
+    id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
+    nome: Mapped[str] = mapped_column("nome", String)
+    email: Mapped[str] = mapped_column("email", String, nullable=False)
+    senha: Mapped[str] = mapped_column("senha", String)
+    ativo: Mapped[bool] = mapped_column("ativo", Boolean)
+    admin: Mapped[bool] = mapped_column("admin", Boolean, default=False)
 
     def __init__(self, nome, email, senha, ativo:bool=True, admin:bool=False):
         self.nome = nome
