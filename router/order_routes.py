@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from helpers.schemas import PedidoSchema, ItemPedidoSchema
+from helpers.schemas import PedidoSchema, ItemPedidoSchema, ResponseSchema
 from helpers.dependencies import start_session, check_token
 from models.models import Pedido, Usuario, ItemPedido
+from typing import List
 
 #APIRouter idica o o inicio do endpoint.
 #Aqui será configurado tudo que tera no aaaa.aaaaaa.com/pedidos
@@ -38,7 +39,7 @@ async def cancelar_pedido(id_pedido: int, session: Session = Depends(start_sessi
         "pedido": pedido
     }
     
-@order_router.get("/lista")
+@order_router.get("/listar")
 async def listar_pedidos(session: Session = Depends(start_session), usuario: Usuario = Depends(check_token)):
     if not getattr(usuario, "admin", True):
         raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
@@ -78,7 +79,7 @@ async def adicionar_item_pedido(
 
     }
 
-@order_router.post("/pedido/remover-item/{id_item_pedido}")
+@order_router.delete("/pedido/remover-item/{id_item_pedido}")
 async def remover_item_pedido(
     id_item_pedido: int,
     session: Session = Depends(start_session),
@@ -105,4 +106,41 @@ async def remover_item_pedido(
         "pedido": pedido
     }
 
+@order_router.post("/pedidos/finalizar/{id_pedido}")
+async def finalizar_pedido(id_pedido: int, session: Session = Depends(start_session), usuario: Session = Depends(check_token)): 
+    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
 
+    if not pedido:
+        raise HTTPException(status_code=400, detail="Pedido não encontrado")
+
+    if usuario.id != pedido.usuario and not usuario.admin: # type: ignore
+        raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa ação.")
+
+    pedido.status = "FINALIZADO" 
+    session.commit()
+    
+    return{
+        "mensagem": f"Pedido número: {pedido.id} finalizado com sucesso", 
+        "pedido": pedido
+    }
+
+@order_router.get("/pedido/{id_pedido}")
+async def visualizar_pedido(
+    id_pedido: int,
+    session: Session = Depends(start_session),
+    usuario: Usuario = Depends(check_token)):
+
+    pedido = session.query(Pedido).filter(Pedido.id==id_pedido).first()
+    if not pedido:
+        raise HTTPException(status_code=400, detail="Pedido não encontrado")
+    if not usuario.admin and usuario.id != pedido.usuario:
+        raise HTTPException(status_code=401, detail="Você não tem permissão para fazer essa modificação")
+    return {
+        'quantidade_itens_pedido': len(pedido.itens),
+        'pedido': pedido
+    }
+
+@order_router.get("/listar/pedidos-usuario", response_model=List[ResponseSchema])
+async def listar_pedidos_usuarios(session: Session = Depends(start_session), usuario: Usuario = Depends(check_token)):
+    pedidos = session.query(Pedido).filter(Pedido.usuario==usuario.id).all() # type: ignore
+    return pedidos
