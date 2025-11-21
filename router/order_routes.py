@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 from helpers.schemas import PedidoSchema, ItemPedidoSchema, ResponseSchema
 from helpers.dependencies import start_session, check_token
 from models.models import Pedido, Usuario, ItemPedido
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from typing import List
+import os
 
 #APIRouter idica o o inicio do endpoint.
 #Aqui será configurado tudo que tera no aaaa.aaaaaa.com/pedidos
@@ -141,6 +145,15 @@ async def visualizar_pedido(
     }
 
 @order_router.get("/listar/pedidos-usuario", response_model=List[ResponseSchema])
-async def listar_pedidos_usuarios(session: Session = Depends(start_session), usuario: Usuario = Depends(check_token)):
+async def listar_pedidos_usuarios(
+    session: Session = Depends(start_session), 
+    usuario: Usuario = Depends(check_token)):
     pedidos = session.query(Pedido).filter(Pedido.usuario==usuario.id).all() # type: ignore
     return pedidos
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # volta 1 nível
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+@order_router.get("/front/pedidos", response_class=HTMLResponse)
+async def pedidos_front(request: Request):
+    return templates.TemplateResponse("pedidos.html", {"request": request})

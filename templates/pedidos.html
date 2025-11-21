@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Pedidos{% endblock %}
+
+{% block content %}
+<h2>Gerenciar Pedidos</h2>
+
+<button onclick="carregarPedidos()">Atualizar Lista</button>
+
+<h3>Pedidos do Usuário</h3>
+<ul id="lista-pedidos"></ul>
+
+<h3>Criar novo pedido</h3>
+<form id="form-criar-pedido">
+    <label>ID do usuário:</label>
+    <input type="number" id="id_usuario">
+    <button type="submit">Criar Pedido</button>
+</form>
+
+<script>
+const token = localStorage.getItem("token"); // Ou coloque na mão para teste
+
+async function carregarPedidos() {
+    const resposta = await fetch("/pedidos/listar/pedidos-usuario", {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    const pedidos = await resposta.json();
+    const lista = document.getElementById("lista-pedidos");
+    lista.innerHTML = "";
+
+    pedidos.forEach(p => {
+        let item = document.createElement("li");
+        item.innerHTML = `Pedido ${p.id} - Status: ${p.status} - Preço: ${p.preco}`;
+        lista.appendChild(item);
+    });
+}
+
+document.getElementById("form-criar-pedido").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const id_usuario = document.getElementById("id_usuario").value;
+
+    const resposta = await fetch("/pedidos/pedido", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ id_usuario })
+    });
+
+    const data = await resposta.json();
+    alert(data.mensagem);
+    carregarPedidos();
+});
+
+// Carregar a lista ao abrir a página
+carregarPedidos();
+</script>
+{% endblock %}
