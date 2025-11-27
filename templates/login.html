@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="login-container">
+  <h2>Sistema de Pedidos</h2>
+  <form id="loginForm" class="login-form">
+    <input type="email" id="email" placeholder="E-mail" required />
+    <input type="password" id="senha" placeholder="Senha" required />
+    <button type="submit">Entrar</button>
+  </form>
+  <p id="msg" class="msg"></p>
+</div>
+
+<script>
+async function refreshAccessTokenWithRefresh() {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return null;
+  try {
+    const resp = await fetch("/auth/refresh-token", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + refreshToken }
+    });
+    if (!resp.ok) {
+      // refresh falhou
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      return null;
+    }
+    const data = await resp.json();
+    localStorage.setItem("access_token", data.access_token);
+    return data.access_token;
+  } catch(e) { return null; }
+}
+
+// Parse simples do payload JWT (sem verificar assinatura) para pegar exp
+function parseJwt(token) {
+  try {
+    const payload = token.split('.')[1];
+    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return json;
+  } catch (e) { return null; }
+}
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  const senha = document.getElementById("senha").value;
+  const resposta = await fetch("/auth/login", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ email, senha })
+  });
+  const msg = document.getElementById("msg");
+  if (!resposta.ok) {
+    const err = await resposta.json().catch(()=>({detail:"Erro"}));
+    msg.innerText = err.detail || "Erro no login";
+    msg.style.color = "red";
+    return;
+  }
+  const data = await resposta.json();
+  localStorage.setItem("access_token", data.access_token);
+  localStorage.setItem("refresh_token", data.refresh_token);
+
+  // opcional: agendar refresh automático
+  const payload = parseJwt(data.access_token);
+  if (payload && payload.exp) {
+    const expiresAt = payload.exp * 1000; // ms
+    const now = Date.now();
+    const msUntilRefresh = Math.max(5000, expiresAt - now - (60 * 1000)); // 1min antes ou 5s mínimo
+    setTimeout(() => {
+      // tenta refresh; ignorar resultado aqui
+      refreshAccessTokenWithRefresh();
+    }, msUntilRefresh);
+  }
+
+  // redireciona para página /pedidos (rota html)
+  window.location.href = "/pedidos";
+});
+</script>
+</body>
+</html>

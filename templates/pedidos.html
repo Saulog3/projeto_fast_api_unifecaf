@@ -1,63 +1,84 @@
-{% extends "base.html" %}
-
-{% block title %}Pedidos{% endblock %}
-
-{% block content %}
-<h2>Gerenciar Pedidos</h2>
-
-<button onclick="carregarPedidos()">Atualizar Lista</button>
-
-<h3>Pedidos do Usuário</h3>
-<ul id="lista-pedidos"></ul>
-
-<h3>Criar novo pedido</h3>
-<form id="form-criar-pedido">
-    <label>ID do usuário:</label>
-    <input type="number" id="id_usuario">
-    <button type="submit">Criar Pedido</button>
-</form>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Pedidos</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Seus pedidos</h2>
+    <button id="btnLogout">Sair</button>
+    <div id="msg"></div>
+    <table id="tabela" border="1">
+      <thead><tr><th>ID</th><th>Status</th><th>Preço</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
 <script>
-const token = localStorage.getItem("token"); // Ou coloque na mão para teste
-
-async function carregarPedidos() {
-    const resposta = await fetch("/pedidos/listar/pedidos-usuario", {
-        headers: {
-            "Authorization": "Bearer " + token
-        }
-    });
-
-    const pedidos = await resposta.json();
-    const lista = document.getElementById("lista-pedidos");
-    lista.innerHTML = "";
-
-    pedidos.forEach(p => {
-        let item = document.createElement("li");
-        item.innerHTML = `Pedido ${p.id} - Status: ${p.status} - Preço: ${p.preco}`;
-        lista.appendChild(item);
-    });
+function getAccessToken() { return localStorage.getItem("access_token"); }
+function getRefreshToken() { return localStorage.getItem("refresh_token"); }
+async function tryRefreshAndGetNewAccess() {
+  const refreshed = await fetch("/auth/refresh-token", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + getRefreshToken() }
+  });
+  if (!refreshed.ok) return null;
+  const d = await refreshed.json();
+  localStorage.setItem("access_token", d.access_token);
+  return d.access_token;
 }
 
-document.getElementById("form-criar-pedido").addEventListener("submit", async (e) => {
-    e.preventDefault();
+async function fetchWithAutoRefresh(url, opts = {}) {
+  let token = getAccessToken();
+  if (!opts.headers) opts.headers = {};
+  if (token) opts.headers.Authorization = "Bearer " + token;
 
-    const id_usuario = document.getElementById("id_usuario").value;
+  let resp = await fetch(url, opts);
+  if (resp.status === 401) {
+    // tenta refresh once
+    const newToken = await tryRefreshAndGetNewAccess();
+    if (!newToken) throw new Error("Não autenticado");
+    opts.headers.Authorization = "Bearer " + newToken;
+    resp = await fetch(url, opts);
+  }
+  return resp;
+}
 
-    const resposta = await fetch("/pedidos/pedido", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({ id_usuario })
+async function carregarPedidos() {
+  const msg = document.getElementById("msg");
+  try {
+    const resp = await fetchWithAutoRefresh("/pedidos/listar", { method: "GET" });
+    if (!resp.ok) {
+      msg.innerText = "Erro: " + resp.status;
+      return;
+    }
+    const data = await resp.json();
+    const tbody = document.querySelector("#tabela tbody");
+    tbody.innerHTML = "";
+    const pedidos = data.pedidos || [];
+    pedidos.forEach(p => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${p.id}</td><td>${p.status}</td><td>${p.preco}</td>`;
+      tbody.appendChild(row);
     });
+  } catch (err) {
+    // não autenticado -> volta ao login
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    window.location.href = "/";
+  }
+}
 
-    const data = await resposta.json();
-    alert(data.mensagem);
-    carregarPedidos();
+document.getElementById("btnLogout").addEventListener("click", () => {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  window.location.href = "/";
 });
 
-// Carregar a lista ao abrir a página
+// ao abrir, carrega
 carregarPedidos();
 </script>
-{% endblock %}
+</body>
+</html>

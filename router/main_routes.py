@@ -1,18 +1,17 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 import os
 
+templates = Jinja2Templates(directory="templates")
 main_router = APIRouter()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATES_DIR = os.path.join(os.path.dirname(BASE_DIR), "templates")
-
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
-
 @main_router.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "titulo": "Projeto - API - Unifecaf"}
-    )
+def pagina_login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@main_router.get("/pedidos", response_class=HTMLResponse)
+def pagina_pedidos(request: Request):
+    # não colocamos Depends(check_token) aqui porque a página HTML precisa ser exibida
+    # e as requisições API que a página faça serão protegidas e validadas pelo backend.
+    return templates.TemplateResponse("pedidos.html", {"request": request})

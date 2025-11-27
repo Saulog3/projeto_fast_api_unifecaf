@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_schema = OAuth2PasswordBearer(tokenUrl='auth/login-form')
+# oauth2_schema = OAuth2PasswordBearer(tokenUrl='auth/login-form')
 
 from router.auth_routes import auth_router
 from router.order_routes import order_router

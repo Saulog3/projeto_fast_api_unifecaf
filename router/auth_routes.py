@@ -7,6 +7,7 @@ from helpers.schemas import UsuarioSchema, LoginSchema
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
+from helpers.dependencies import oauth2_schema
 
 
 #APIRouter idica o inicio do endpoint.
@@ -85,14 +86,9 @@ async def login(login: LoginSchema, session: Session = Depends(start_session)):
     usuario = autenticar_usuario(login.email, login.senha, session)
     if not usuario:
         raise HTTPException(status_code=400, detail='Usuário não encontrado ou credenciais inválidas')
-    else:
-        access_token = send_token(usuario.id)
-        refresh_token = send_token(usuario.id, duracao_token=timedelta(days=7))
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "Bearer"
-        }
+    access_token = send_token(usuario.id)
+    refresh_token = send_token(usuario.id, duracao_token=timedelta(days=7))
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "Bearer"}
 
 
 
@@ -103,3 +99,30 @@ async def use_refresh_token(usuario: Usuario = Depends(check_token)):
     "access_token": access_token,
     "token_type": "Bearer"
 }
+
+@auth_router.get("/me")
+def me(usuario: Usuario = Depends(check_token)):
+    return {"id": usuario.id, "email": usuario.email, "admin": usuario.admin}
+
+@auth_router.post("/refresh-token")
+def refresh_token_endpoint(token: str = Depends(oauth2_schema), session: Session = Depends(start_session)):
+    """
+    Recebe o refresh token no header Authorization: Bearer <refresh_token>
+    Retorna novo access_token (curta duração).
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        sub = payload.get("sub")
+        if sub is None:
+            raise HTTPException(status_code=401, detail="Refresh token inválido")
+        user_id = int(sub)
+    except (JWTError, ValueError):
+        raise HTTPException(status_code=401, detail="Refresh token inválido")
+
+    usuario = session.query(Usuario).filter(Usuario.id == user_id).first()
+    if not usuario:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
+
+    # Gera novo access token curto
+    access_token = send_token(usuario.id)  # by default usa ACCESS_TOKEN_EXPIRE_MINUTES
+    return {"access_token": access_token, "token_type": "Bearer"}
