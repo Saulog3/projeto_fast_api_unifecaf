@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu Principal</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .menu-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .user-info {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        #pedidosList {
+            margin-top: 20px;
+        }
+        .pedido-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .status-novo {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-finalizado {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-cancelado {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .pedido-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .pedido-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="menu-container">
+    <h1>📦 Menu Principal</h1>
+
+    <div class="user-info">
+        <div>
+            <p>Bem-vindo, <strong id="username"></strong>!</p>
+            <p style="font-size: 14px; color: #666;" id="useremail"></p>
+        </div>
+        <button class="btn btn-danger" onclick="logout()">Sair</button>
+    </div>
+
+    <div class="button-group">
+        <button class="btn btn-success" onclick="mostrarNovoPedido()">➕ Novo Pedido</button>
+        <button class="btn" onclick="carregarPedidos()">📋 Meus Pedidos</button>
+    </div>
+
+    <!-- Seção para criar novo pedido -->
+    <div id="novoPedidoSection" style="display: none; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 5px;">
+        <h2>Criar Novo Pedido</h2>
+        <button class="btn btn-danger" onclick="esconderNovoPedido()" style="float: right;">Cancelar</button>
+        <div style="clear: both;"></div>
+        
+        <div id="novoPedidoForm">
+            <h3 style="margin-top: 20px;">Novo Pedido Criado! ID: <span id="novoPedidoId"></span></h3>
+            <p>Adicione itens ao seu pedido:</p>
+            
+            <form id="adicionarItemForm">
+                <label>Quantidade</label>
+                <input type="number" id="quantidade" min="1" required>
+
+                <label>Sabor</label>
+                <input type="text" id="sabor" placeholder="Ex: Pizza Margherita" required>
+
+                <label>Tamanho</label>
+                <select id="tamanho" required>
+                    <option value="">Selecione um tamanho</option>
+                    <option value="P">Pequeno (P)</option>
+                    <option value="M">Médio (M)</option>
+                    <option value="G">Grande (G)</option>
+                    <option value="GG">Extra Grande (GG)</option>
+                </select>
+
+                <label>Preço Unitário</label>
+                <input type="number" id="preco_unitario" step="0.01" placeholder="0.00" required>
+
+                <button type="submit" class="btn btn-success">Adicionar Item</button>
+            </form>
+
+            <div id="itensNovoPedido" style="margin-top: 20px;">
+                <h4>Itens do Pedido:</h4>
+                <div id="listItens"></div>
+                <p><strong>Total: R$ <span id="precoTotal">0.00</span></strong></p>
+            </div>
+
+            <button class="btn btn-success" onclick="finalizarPedido()" style="width: 100%; margin-top: 20px;">✅ Finalizar Pedido</button>
+        </div>
+    </div>
+
+    <!-- Lista de pedidos -->
+    <div id="pedidosList">
+        <h2>Meus Pedidos</h2>
+        <div id="listaPedidos">
+            <p>Carregando pedidos...</p>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/menu.js"></script>
+</body>
+</html>

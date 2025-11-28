@@ -150,10 +150,3 @@ async def listar_pedidos_usuarios(
     usuario: Usuario = Depends(check_token)):
     pedidos = session.query(Pedido).filter(Pedido.usuario==usuario.id).all() # type: ignore
     return pedidos
-
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # volta 1 nível
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-
-@order_router.get("/front/pedidos", response_class=HTMLResponse)
-async def pedidos_front(request: Request):
-    return templates.TemplateResponse("pedidos.html", {"request": request})

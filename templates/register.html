@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Criar Conta</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
         body {
@@ -14,7 +14,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
         }
-        .login-container {
+        .container {
             background: white;
             padding: 40px;
             border-radius: 10px;
@@ -22,34 +22,34 @@
             width: 100%;
             max-width: 400px;
         }
-        .login-container h2 {
+        .container h2 {
             text-align: center;
             color: #333;
             margin-bottom: 30px;
         }
-        .login-container form {
+        .container form {
             display: flex;
             flex-direction: column;
         }
-        .login-container label {
+        .container label {
             margin-top: 15px;
             margin-bottom: 5px;
             color: #555;
             font-weight: 500;
         }
-        .login-container input {
+        .container input, .container select {
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 14px;
             transition: border-color 0.3s;
         }
-        .login-container input:focus {
+        .container input:focus, .container select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 5px rgba(102, 126, 234, 0.1);
         }
-        .login-container button {
+        .container button {
             margin-top: 20px;
             padding: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -61,27 +61,27 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        .login-container button:hover {
+        .container button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-        .login-container button:active {
+        .container button:active {
             transform: translateY(0);
         }
-        .login-container p {
+        .container p {
             text-align: center;
             margin-top: 20px;
             color: #666;
         }
-        .login-container a {
+        .container a {
             color: #667eea;
             text-decoration: none;
             font-weight: 600;
         }
-        .login-container a:hover {
+        .container a:hover {
             text-decoration: underline;
         }
-        #msgErro {
+        #msg {
             margin-top: 15px;
             padding: 12px;
             border-radius: 5px;
@@ -89,7 +89,13 @@
             font-weight: 500;
             display: none;
         }
-        #msgErro.erro {
+        #msg.success {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        #msg.error {
             display: block;
             background-color: #f8d7da;
             color: #721c24;
@@ -98,27 +104,31 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>🔐 Entrar na Sua Conta</h2>
 
-        <form id="loginForm">
-            <label for="email">Email</label>
-            <input type="email" id="email" required>
+<div class="container">
+    <h2>📝 Criar nova conta</h2>
 
-            <label for="senha">Senha</label>
-            <input type="password" id="senha" required>
+    <form id="registerForm">
+        <label for="nome">Nome Completo</label>
+        <input type="text" id="nome" placeholder="Seu nome" required>
 
-            <button type="submit">Entrar</button>
-        </form>
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="seu@email.com" required>
 
-        <p style="margin-top: 20px;">
-            Não tem conta?
-            <a href="/register">Criar conta</a>
-        </p>
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" placeholder="Mínimo 6 caracteres" required>
 
-        <p id="msgErro" class="erro"></p>
-    </div>
+        <label for="confirmarSenha">Confirmar Senha</label>
+        <input type="password" id="confirmarSenha" placeholder="Confirme sua senha" required>
 
-    <script src="/static/js/login.js"></script>
+        <button type="submit">Criar Conta</button>
+
+        <p>Já tem conta? <a href="/">Voltar ao login</a></p>
+    </form>
+
+    <p id="msg"></p>
+</div>
+
+<script src="/static/js/register.js"></script>
 </body>
 </html>

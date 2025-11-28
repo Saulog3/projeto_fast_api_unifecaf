@@ -86,9 +86,21 @@ async def login(login: LoginSchema, session: Session = Depends(start_session)):
     usuario = autenticar_usuario(login.email, login.senha, session)
     if not usuario:
         raise HTTPException(status_code=400, detail='Usuário não encontrado ou credenciais inválidas')
+    
     access_token = send_token(usuario.id)
     refresh_token = send_token(usuario.id, duracao_token=timedelta(days=7))
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "Bearer"}
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "Bearer",
+        "usuario": {
+            "id": usuario.id,
+            "nome": usuario.nome,
+            "email": usuario.email,
+            "admin": usuario.admin
+        }
+    }
 
 
 
