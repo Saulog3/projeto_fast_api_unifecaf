@@ -123,8 +123,8 @@ uvicorn main:app --reload
 -   `POST /pedidos/pedido` --- Criar pedido\
 -   `POST /pedidos/pedido/adicionar-item/{id}` --- Adicionar item\
 -   `DELETE /pedidos/pedido/remover-item/{id}` --- Remover item\
--   `POST /pedidos/pedidos/finalizar/{id}` --- Finalizar pedido\
--   `POST /pedidos/pedidos/cancelar/{id}` --- Cancelar pedido\
+-   `POST /pedidos/pedido/finalizar/{id}` --- Finalizar pedido\
+-   `POST /pedidos/pedido/cancelar/{id}` --- Cancelar pedido\
 -   `GET /pedidos/listar` --- Listar todos os pedidos (admin)\
 -   `GET /pedidos/pedido/{id}` --- Detalhes do pedido\
 -   `GET /pedidos/listar/pedidos-usuario` --- Pedidos do usuário
@@ -140,7 +140,6 @@ uvicorn main:app --reload
 
 -   Criar testes automatizados\
 -   Criar Dockerfile e docker-compose\
--   Melhorar implementação de refresh token
 
 ------------------------------------------------------------------------
 
